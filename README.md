@@ -27,3 +27,8 @@ This script installs a streamlined set of development tools and applications sui
 - Review the license terms of each installed application before use.
 - For more information about each script, refer to the script files directly.
 
+This script uses Winget to install these packages.
+If the packages are removed from Winget, as in the case of Visual Studio Enterprise and Pro, the script will need to be updated.
+The Script currently downloads the latest versions of these products.
+For things like Visual Studio, or SQL Server Developer, that are tied to version numbers, it will need to be updated to reflect those changes.
+
