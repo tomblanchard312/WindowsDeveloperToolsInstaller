@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     This script installs applications and tools commonly used by professional developers on a fresh Windows installation.
 
@@ -13,6 +13,20 @@
     Date: February 6 2024
 
 #>
+
+# Function to check for internet connection
+function Test-InternetConnection {
+    $connected = $false
+    try {
+        $request = [System.Net.WebRequest]::Create("http://www.google.com")
+        $response = $request.GetResponse()
+        $connected = $response.StatusCode -eq "OK"
+        $response.Close()
+    } catch {
+        $connected = $false
+    }
+    return $connected
+}
 
 # Function to install applications
 function Install-Application {
@@ -53,49 +67,53 @@ function Prompt-VisualStudioEdition {
     return $choice
 }
 
-# Define the URL for Visual Studio 2022 Professional license terms
-$professionalUrl = "https://visualstudio.microsoft.com/license-terms/vs2022-ga-proenterprise/"
-Write-Host "For license terms of Visual Studio 2022 Professional, please visit: $professionalUrl"
+# Check internet connection
+if (-not (Test-InternetConnection)) {
+    Write-Host "No internet connection found. Please connect to the internet and try again."
+    exit
+}
 
-# Define the URL for Visual Studio 2022 Enterprise license terms
-$enterpriseUrl = "https://visualstudio.microsoft.com/license-terms/vs2022-ga-proenterprise/"
-Write-Host "For license terms of Visual Studio 2022 Enterprise, please visit: $enterpriseUrl"
+# Define download URLs
+$professionalUrl = "https://aka.ms/vs/17/release/vs_professional.exe"
+$enterpriseUrl = "https://aka.ms/vs/17/release/vs_enterprise.exe"
 
-Write-Host "Creating Professional Developer Workstation From Fresh Windows Install"
+# Prompt user for Visual Studio edition choice
+$vsEditionChoice = Prompt-VisualStudioEdition
 
-# Install applications
+# Download and run Visual Studio installer
+if ($vsEditionChoice -eq "1") {
+    $installerUrl = $professionalUrl
+} elseif ($vsEditionChoice -eq "2") {
+    $installerUrl = $enterpriseUrl
+} else {
+    Write-Warning "Invalid choice. Please choose 1 for Professional or 2 for Enterprise."
+    exit
+}
+
+# Download installer
+$downloadDirectory = [System.IO.Path]::Combine([System.Environment]::GetFolderPath('UserProfile'), 'Downloads')
+$installerPath = Join-Path -Path $downloadDirectory -ChildPath "vs_installer.exe"
+Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath
+
+# Run installer with specified options
+Start-Process -FilePath $installerPath -ArgumentList "--layout C:\VSLayout --lang en-US" -Wait
+
+# Install other applications
+Write-Host "Installing other applications..."
+
 Install-Application -AppName "VSCode" -AppIdentifier "Microsoft.VisualStudioCode"
 Install-Application -AppName "Terminal" -AppIdentifier "Microsoft.WindowsTerminal"
 Install-Application -AppName "AzureCLI" -AppIdentifier "Microsoft.AzureCLI"
 Install-Application -AppName "DataCLI" -AppIdentifier "Microsoft.AzureDataCLI"
 Install-Application -AppName "Azure StorageExplorer" -AppIdentifier "Microsoft.AzureStorageExplorer"
 Install-Application -AppName "PowerBI" -AppIdentifier "Microsoft.PowerBI"
-Install-Application -AppName "PowerAutomate Desktop" -AppIdentifier "Microsoft.PowerAutomateDesktop"
 Install-Application -AppName "Powershell7" -AppIdentifier "Microsoft.PowerShell"
 Install-Application -AppName "RDP" -AppIdentifier "Microsoft.RemoteDesktopClient"
 Install-Application -AppName "OneDrive Enterprise" -AppIdentifier "Microsoft.OneDriveForBusiness"
 Install-Application -AppName "Acrobat" -AppIdentifier "Adobe.Acrobat.Reader.64-bit"
-Install-Application -AppName "Chrome" -AppIdentifier "Google.Chrome"
-Install-Application -AppName "Firefox" -AppIdentifier "Mozilla.Firefox"
-Install-Application -AppName "SQL Tools" -AppIdentifier "Microsoft.Sqlcmd"
-Install-Application -AppName "SQL Server Developer" -AppIdentifier "Microsoft.SQLServer.2022.Developer"
 Install-Application -AppName "Azure Data Studio" -AppIdentifier "Microsoft.AzureDataStudio"
 Install-Application -AppName "SQL Server Management Studio" -AppIdentifier "Microsoft.SQLServerManagementStudio"
-Install-Application -AppName "Teams" -AppIdentifier "Microsoft.Teams"
 Install-Application -AppName "GitHub Desktop" -AppIdentifier "GitHub.GitHubDesktop"
-Install-Application -AppName "Microsoft Office 365 Apps for Enterprise" -AppIdentifier "Microsoft.Office"
-
-# Prompt user for Visual Studio edition choice
-$vsEditionChoice = Prompt-VisualStudioEdition
-
-# Install Visual Studio based on user's choice
-if ($vsEditionChoice -eq "1") {
-    Install-Application -AppName "Visual Studio 2022 Professional" -AppIdentifier "Microsoft.VisualStudio.2022.Professional --silent --override --wait --quiet --installWhileDownloading --add ProductLang En-us --includeRecommended"
-} elseif ($vsEditionChoice -eq "2") {
-    Install-Application -AppName "Visual Studio 2022 Enterprise" -AppIdentifier "Microsoft.VisualStudio.2022.Enterprise --silent --override --wait --quiet --installWhileDownloading --add ProductLang En-us --includeRecommended"
-} else {
-    Write-Warning "Invalid choice. Please choose 1 for Professional or 2 for Enterprise."
-}
 
 # Update all installed packages using winget
 Write-Host "Updating installed packages..."
