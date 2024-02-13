@@ -95,8 +95,33 @@ $downloadDirectory = [System.IO.Path]::Combine([System.Environment]::GetFolderPa
 $installerPath = Join-Path -Path $downloadDirectory -ChildPath "vs_installer.exe"
 Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath
 
-# Run installer with specified options
-Start-Process -FilePath $installerPath -ArgumentList "--layout C:\VSLayout --lang en-US" -Wait
+# Wait until the download is complete
+$downloadComplete = $false
+$previousFileSize = -1
+$timeoutInSeconds = 300  # Adjust timeout as needed (e.g., 5 minutes)
+
+$timeout = [System.DateTime]::Now.AddSeconds($timeoutInSeconds)
+
+while (-not $downloadComplete -and [System.DateTime]::Now -lt $timeout) {
+    Start-Sleep -Seconds 5  # Check every 5 seconds
+
+    $currentFileSize = (Get-Item $installerPath).Length
+
+    if ($currentFileSize -eq $previousFileSize) {
+        $downloadComplete = $true
+    } else {
+        $previousFileSize = $currentFileSize
+    }
+}
+
+if ($downloadComplete) {
+    Write-Host "Download complete. Proceeding to install."
+    # Run installer with specified options
+    Start-Process -FilePath $installerPath -ArgumentList "--layout C:\VSLayout --lang en-US" -Wait
+} else {
+    Write-Host "Download did not complete within the specified timeout. Aborting installation."
+    exit
+}
 
 # Install other applications
 Write-Host "Installing other applications..."
