@@ -18,7 +18,7 @@ This script installs a streamlined set of development tools and applications sui
 1. Download the appropriate script based on your requirements.
 2. Open PowerShell with administrator privileges.
 3. Navigate to the directory where the script is saved.
-4. Execute the script by running Set-ExecutionPolicy `Bypass -Scope Process -Force` then your choice of scripts `.\Install-DeveloperWorkstationEntPro.ps1` or `.\Install-DeveloperWorkstationSBP.ps1`.
+4. Execute the script by running `Set-ExecutionPolicy Bypass -Scope Process -Force` then your choice of scripts `.\Install-DeveloperWorkstationEntPro.ps1` or `.\Install-DeveloperWorkstationSBP.ps1`.
 5. Follow the on-screen prompts, if any, to complete the installation process.
 
 ## Notes
